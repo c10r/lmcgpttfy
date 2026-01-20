@@ -130,7 +130,7 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
         </div>
         
         <p className="text-center text-xs text-muted-foreground mt-4">
-          letmechatgptthat.com • For all those "quick questions"
+          lmcgpttfy.app • For all those "quick questions"
         </p>
       </div>
     </div>
