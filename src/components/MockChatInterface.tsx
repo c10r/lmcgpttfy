@@ -14,6 +14,14 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
   const [showSarcasm, setShowSarcasm] = useState(false);
   const [sendClicked, setSendClicked] = useState(false);
   const didCompleteRef = useRef(false);
+  const cursorClasses =
+    phase === "moving-mouse"
+      ? "opacity-100 translate-x-6 translate-y-6"
+      : phase === "clicking"
+        ? "opacity-100 translate-x-24 translate-y-6 scale-95"
+        : phase === "typing" || phase === "submitting" || phase === "redirecting"
+          ? "opacity-0 translate-x-24 translate-y-6"
+          : "opacity-0 -translate-x-6 -translate-y-6";
 
   useEffect(() => {
     if (!sendClicked) return;
@@ -117,57 +125,75 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
           <h1 className="text-3xl md:text-4xl font-medium tracking-tight mb-6">
             What’s on the agenda today?
           </h1>
-          <div className="w-[min(760px,90vw)] mx-auto flex items-center gap-2">
-            <button
-              aria-label="Add photos"
-              className="flex items-center justify-center h-9 w-9 rounded-full border border-border text-muted-foreground hover:bg-muted transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-label="" className="icon">
-                <use href="/cdn/assets/sprites-core-k5zux585.svg#712359" fill="currentColor" />
-              </svg>
-            </button>
+          <div className="relative w-[min(760px,90vw)] mx-auto">
             <div
-              className={`relative flex-1 flex items-center bg-card border rounded-full px-4 py-3 shadow-sm transition-all ${
+              className={`pointer-events-none absolute left-2 top-2 z-20 transition-all duration-700 ease-out ${cursorClasses}`}
+              style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+            >
+              <svg viewBox="0 0 24 24" className="w-5 h-5 text-foreground" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M4.2 2.5c-.6-.3-1.3.2-1.1.9l5.2 18.2c.2.7 1.1.8 1.5.2l3-4.7 5.4 4.6c.4.3 1 .2 1.2-.2l2-3.4c.2-.4.1-1-.3-1.2l-6.6-3.1 2.6-4.2c.4-.6 0-1.4-.7-1.5L4.2 2.5z"
+                />
+              </svg>
+            </div>
+            <div
+              className={`relative bg-card border rounded-2xl shadow-sm transition-all ${
                 phase === "clicking" || phase === "typing" || phase === "submitting"
                   ? "border-foreground/30 ring-1 ring-foreground/10"
                   : "border-border"
               }`}
             >
-              <div className="flex-1 text-sm md:text-base min-h-[24px] text-left">
-                {phase === "typing" ? (
-                  <TypedText
-                    text={query}
-                    speed={100}
-                    onComplete={handleTypingComplete}
-                    showCursor={false}
-                    className="text-foreground"
-                  />
-                ) : phase === "submitting" || phase === "redirecting" ? (
-                  <span className="text-foreground">{query}</span>
-                ) : (
-                  <span className="text-muted-foreground">Ask anything</span>
-                )}
+              <div className="flex items-center px-4 py-3">
+                <div className="flex-1 text-sm md:text-base min-h-[24px] text-left">
+                  {phase === "typing" ? (
+                    <TypedText
+                      text={query}
+                      speed={100}
+                      onComplete={handleTypingComplete}
+                      showCursor={false}
+                      className="text-foreground"
+                    />
+                  ) : phase === "submitting" || phase === "redirecting" ? (
+                    <span className="text-foreground">{query}</span>
+                  ) : (
+                    <span className="text-muted-foreground">Ask anything</span>
+                  )}
+                </div>
               </div>
-              <button
-                className={`ml-3 p-2 rounded-full transition-all duration-150 ${
-                  phase === "typing" || phase === "submitting" || phase === "redirecting"
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-muted-foreground"
-                } ${sendClicked ? "scale-95" : ""}`}
-              >
-                <ArrowUp className="w-4 h-4" />
-              </button>
+              <div className="flex items-center justify-between px-3 pb-3">
+                <button
+                  aria-label="Add photos"
+                  className="flex items-center justify-center h-9 w-9 rounded-full border border-border text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-label="" className="icon">
+                    <use href="/cdn/assets/sprites-core-k5zux585.svg#712359" fill="currentColor" />
+                  </svg>
+                </button>
+                <button
+                  aria-label={
+                    phase === "typing" || phase === "submitting" || phase === "redirecting"
+                      ? "Submit prompt"
+                      : "Start voice mode"
+                  }
+                  className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150 ${
+                    phase === "typing" || phase === "submitting" || phase === "redirecting"
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-foreground hover:opacity-80"
+                  } ${sendClicked ? "scale-95" : ""}`}
+                >
+                  <div className="flex items-center justify-center">
+                    {phase === "typing" || phase === "submitting" || phase === "redirecting" ? (
+                      <ArrowUp className="w-4 h-4" />
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" className="icon">
+                        <use href="/cdn/assets/sprites-core-k5zux585.svg#ac37b7" fill="currentColor" />
+                      </svg>
+                    )}
+                  </div>
+                </button>
+              </div>
             </div>
-            <button
-              aria-label="Start voice mode"
-              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground hover:opacity-80 transition-opacity"
-            >
-              <div className="flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" className="icon">
-                  <use href="/cdn/assets/sprites-core-k5zux585.svg#ac37b7" fill="currentColor" />
-                </svg>
-              </div>
-            </button>
           </div>
           {showSarcasm && (
             <p className="text-xs text-muted-foreground mt-4">
