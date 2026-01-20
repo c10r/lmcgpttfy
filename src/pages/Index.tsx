@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { ChatInput } from "@/components/ChatInput";
 import { ShareLink } from "@/components/ShareLink";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { Sparkles } from "lucide-react";
 
 const Index = () => {
@@ -27,7 +26,6 @@ const Index = () => {
           </div>
           <h1 className="text-foreground font-semibold">Let Me ChatGPT That For You</h1>
         </div>
-        <ThemeToggle />
       </header>
 
       {/* Main content */}
