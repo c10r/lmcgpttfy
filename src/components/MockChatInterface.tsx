@@ -117,9 +117,17 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
           <h1 className="text-3xl md:text-4xl font-medium tracking-tight mb-6">
             What’s on the agenda today?
           </h1>
-          <div className="w-[min(760px,90vw)] mx-auto">
+          <div className="w-[min(760px,90vw)] mx-auto flex items-center gap-2">
+            <button
+              aria-label="Add photos"
+              className="flex items-center justify-center h-9 w-9 rounded-full border border-border text-muted-foreground hover:bg-muted transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-label="" className="icon">
+                <use href="/cdn/assets/sprites-core-k5zux585.svg#712359" fill="currentColor" />
+              </svg>
+            </button>
             <div
-              className={`relative flex items-center bg-card border rounded-full px-4 py-3 shadow-sm transition-all ${
+              className={`relative flex-1 flex items-center bg-card border rounded-full px-4 py-3 shadow-sm transition-all ${
                 phase === "clicking" || phase === "typing" || phase === "submitting"
                   ? "border-foreground/30 ring-1 ring-foreground/10"
                   : "border-border"
@@ -127,29 +135,39 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
             >
               <div className="flex-1 text-sm md:text-base min-h-[24px] text-left">
                 {phase === "typing" ? (
-                <TypedText
-                  text={query}
-                  speed={100}
-                  onComplete={handleTypingComplete}
-                  showCursor={false}
-                  className="text-foreground"
-                />
-              ) : phase === "submitting" || phase === "redirecting" ? (
-                <span className="text-foreground">{query}</span>
-              ) : (
-                <span className="text-muted-foreground">Ask anything</span>
-              )}
+                  <TypedText
+                    text={query}
+                    speed={100}
+                    onComplete={handleTypingComplete}
+                    showCursor={false}
+                    className="text-foreground"
+                  />
+                ) : phase === "submitting" || phase === "redirecting" ? (
+                  <span className="text-foreground">{query}</span>
+                ) : (
+                  <span className="text-muted-foreground">Ask anything</span>
+                )}
+              </div>
+              <button
+                className={`ml-3 p-2 rounded-full transition-all duration-150 ${
+                  phase === "typing" || phase === "submitting" || phase === "redirecting"
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground"
+                } ${sendClicked ? "scale-95" : ""}`}
+              >
+                <ArrowUp className="w-4 h-4" />
+              </button>
             </div>
             <button
-              className={`ml-3 p-2 rounded-full transition-all duration-150 ${
-                phase === "typing" || phase === "submitting" || phase === "redirecting"
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground"
-              } ${sendClicked ? "scale-95" : ""}`}
+              aria-label="Start voice mode"
+              className="relative flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground hover:opacity-80 transition-opacity"
             >
-              <ArrowUp className="w-4 h-4" />
+              <div className="flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" className="icon">
+                  <use href="/cdn/assets/sprites-core-k5zux585.svg#ac37b7" fill="currentColor" />
+                </svg>
+              </div>
             </button>
-          </div>
           </div>
           {showSarcasm && (
             <p className="text-xs text-muted-foreground mt-4">
