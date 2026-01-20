@@ -76,7 +76,7 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4">
         <div className="flex items-center gap-2 text-sm font-medium">
-          <div className="w-7 h-7 rounded-full bg-foreground/10 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-full flex items-center justify-center">
             <img
               src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ef/ChatGPT-Logo.svg/960px-ChatGPT-Logo.svg.png"
               alt="ChatGPT logo"
