@@ -19,6 +19,11 @@ export const TypedText = ({
   const [isComplete, setIsComplete] = useState(false);
 
   useEffect(() => {
+    setDisplayedText("");
+    setIsComplete(false);
+  }, [text]);
+
+  useEffect(() => {
     if (displayedText.length < text.length) {
       // Random delay to simulate human typing (sometimes faster, sometimes pauses)
       const randomDelay = speed + Math.random() * speed * 0.8;
