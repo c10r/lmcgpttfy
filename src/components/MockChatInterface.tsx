@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { TypedText } from "./TypedText";
 import { ArrowUp, HelpCircle } from "lucide-react";
 
@@ -7,21 +7,71 @@ interface MockChatInterfaceProps {
   onComplete: () => void;
 }
 
-type Phase = "idle" | "moving-mouse" | "clicking" | "typing" | "submitting" | "redirecting";
+type Phase =
+  | "idle"
+  | "moving-to-input"
+  | "clicking-input"
+  | "typing"
+  | "moving-to-send"
+  | "clicking-send"
+  | "redirecting";
 
 export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps) => {
   const [phase, setPhase] = useState<Phase>("idle");
   const [showSarcasm, setShowSarcasm] = useState(false);
   const [sendClicked, setSendClicked] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ x: -24, y: -24 });
   const didCompleteRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLDivElement | null>(null);
+  const sendButtonRef = useRef<HTMLButtonElement | null>(null);
   const cursorClasses =
-    phase === "moving-mouse"
-      ? "opacity-100 translate-x-6 translate-y-6"
-      : phase === "clicking"
-        ? "opacity-100 translate-x-24 translate-y-6 scale-95"
-        : phase === "typing" || phase === "submitting" || phase === "redirecting"
-          ? "opacity-0 translate-x-24 translate-y-6"
-          : "opacity-0 -translate-x-6 -translate-y-6";
+    phase === "moving-to-input"
+      ? "opacity-100"
+      : phase === "clicking-input"
+        ? "opacity-100 scale-95"
+        : phase === "typing"
+          ? "opacity-30"
+          : phase === "moving-to-send"
+            ? "opacity-100"
+            : phase === "clicking-send"
+              ? "opacity-100 scale-95"
+              : "opacity-0";
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    const input = inputRef.current;
+    const sendButton = sendButtonRef.current;
+    if (!container) return;
+
+    const containerRect = container.getBoundingClientRect();
+    const centerInContainer = (rect: DOMRect) => ({
+      x: rect.left - containerRect.left + rect.width / 2,
+      y: rect.top - containerRect.top + rect.height / 2,
+    });
+
+    if (
+      phase === "moving-to-input" ||
+      phase === "clicking-input" ||
+      phase === "typing"
+    ) {
+      if (input) {
+        setCursorPos(centerInContainer(input.getBoundingClientRect()));
+      }
+      return;
+    }
+
+    if (phase === "moving-to-send" || phase === "clicking-send") {
+      if (sendButton) {
+        setCursorPos(centerInContainer(sendButton.getBoundingClientRect()));
+      }
+      return;
+    }
+
+    if (phase === "idle") {
+      setCursorPos({ x: -24, y: -24 });
+    }
+  }, [phase]);
 
   useEffect(() => {
     if (!sendClicked) return;
@@ -31,16 +81,16 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
 
   useEffect(() => {
     // Start the animation sequence
-    const timer = setTimeout(() => setPhase("moving-mouse"), 500);
+    const timer = setTimeout(() => setPhase("moving-to-input"), 500);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (phase === "moving-mouse") {
-      const timer = setTimeout(() => setPhase("clicking"), 800);
+    if (phase === "moving-to-input") {
+      const timer = setTimeout(() => setPhase("clicking-input"), 800);
       return () => clearTimeout(timer);
     }
-    if (phase === "clicking") {
+    if (phase === "clicking-input") {
       const timer = setTimeout(() => setPhase("typing"), 400);
       return () => clearTimeout(timer);
     }
@@ -51,6 +101,18 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
           handleTypingComplete();
         }
       }, maxTypingMs);
+      return () => clearTimeout(timer);
+    }
+    if (phase === "moving-to-send") {
+      const timer = setTimeout(() => setPhase("clicking-send"), 700);
+      return () => clearTimeout(timer);
+    }
+    if (phase === "clicking-send") {
+      setSendClicked(true);
+      const timer = setTimeout(() => {
+        setShowSarcasm(true);
+        setPhase("redirecting");
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [phase]);
@@ -69,14 +131,7 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
   const handleTypingComplete = () => {
     if (didCompleteRef.current) return;
     didCompleteRef.current = true;
-    setPhase("submitting");
-    setSendClicked(true);
-    setTimeout(() => {
-      setShowSarcasm(true);
-      setTimeout(() => {
-        setPhase("redirecting");
-      }, 2000);
-    }, 500);
+    setPhase("moving-to-send");
   };
 
   return (
@@ -125,26 +180,31 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
           <h1 className="text-3xl md:text-4xl font-medium tracking-tight mb-6">
             What’s on the agenda today?
           </h1>
-          <div className="relative w-[min(760px,90vw)] mx-auto">
+          <div className="relative w-[min(760px,90vw)] mx-auto" ref={containerRef}>
             <div
-              className={`pointer-events-none absolute left-2 top-2 z-20 transition-all duration-700 ease-out ${cursorClasses}`}
-              style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.25))" }}
+              className={`pointer-events-none absolute left-2 top-2 z-50 transition-all duration-700 ease-out ${cursorClasses}`}
+              style={{
+                filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.35))",
+                transform: `translate3d(${cursorPos.x}px, ${cursorPos.y}px, 0)`,
+              }}
             >
-              <svg viewBox="0 0 24 24" className="w-5 h-5 text-foreground" aria-hidden="true">
-                <path
+              <svg viewBox="0 0 24 24" className="w-6 h-6 text-black" aria-hidden="true">
+                <polygon
                   fill="currentColor"
-                  d="M4.2 2.5c-.6-.3-1.3.2-1.1.9l5.2 18.2c.2.7 1.1.8 1.5.2l3-4.7 5.4 4.6c.4.3 1 .2 1.2-.2l2-3.4c.2-.4.1-1-.3-1.2l-6.6-3.1 2.6-4.2c.4-.6 0-1.4-.7-1.5L4.2 2.5z"
+                  stroke="#fff"
+                  strokeWidth="0.7"
+                  points="4,3 4,20 9,15 12,22 15,21 12,14 19,14"
                 />
               </svg>
             </div>
             <div
               className={`relative bg-card border rounded-2xl shadow-sm transition-all ${
-                phase === "clicking" || phase === "typing" || phase === "submitting"
+                phase === "clicking-input" || phase === "typing"
                   ? "border-foreground/30 ring-1 ring-foreground/10"
                   : "border-border"
               }`}
             >
-              <div className="flex items-center px-4 py-3">
+              <div className="flex items-center px-4 py-3" ref={inputRef}>
                 <div className="flex-1 text-sm md:text-base min-h-[24px] text-left">
                   {phase === "typing" ? (
                     <TypedText
@@ -154,7 +214,7 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
                       showCursor={false}
                       className="text-foreground"
                     />
-                  ) : phase === "submitting" || phase === "redirecting" ? (
+                  ) : phase === "moving-to-send" || phase === "clicking-send" || phase === "redirecting" ? (
                     <span className="text-foreground">{query}</span>
                   ) : (
                     <span className="text-muted-foreground">Ask anything</span>
@@ -172,18 +232,28 @@ export const MockChatInterface = ({ query, onComplete }: MockChatInterfaceProps)
                 </button>
                 <button
                   aria-label={
-                    phase === "typing" || phase === "submitting" || phase === "redirecting"
+                    phase === "typing" ||
+                    phase === "moving-to-send" ||
+                    phase === "clicking-send" ||
+                    phase === "redirecting"
                       ? "Submit prompt"
                       : "Start voice mode"
                   }
                   className={`relative flex h-9 w-9 items-center justify-center rounded-full transition-all duration-150 ${
-                    phase === "typing" || phase === "submitting" || phase === "redirecting"
+                    phase === "typing" ||
+                    phase === "moving-to-send" ||
+                    phase === "clicking-send" ||
+                    phase === "redirecting"
                       ? "bg-foreground text-background"
                       : "bg-muted text-foreground hover:opacity-80"
                   } ${sendClicked ? "scale-95" : ""}`}
+                  ref={sendButtonRef}
                 >
                   <div className="flex items-center justify-center">
-                    {phase === "typing" || phase === "submitting" || phase === "redirecting" ? (
+                    {phase === "typing" ||
+                    phase === "moving-to-send" ||
+                    phase === "clicking-send" ||
+                    phase === "redirecting" ? (
                       <ArrowUp className="w-4 h-4" />
                     ) : (
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" aria-hidden="true" className="icon">
